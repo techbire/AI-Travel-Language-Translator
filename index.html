@@ -1172,43 +1172,48 @@
             }
 
             verifyApiKey(apiKey) {
-                return new Promise((resolve, reject) => {
-                    // Simple test request to Gemini API to verify the key works
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    
-                    const requestBody = {
-                        contents: [{
-                            parts: [{
-                                text: "Simple test. Please respond with 'API working'."
-                            }]
-                        }]
-                    };
-                    
-                    fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestBody)
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`API request failed with status ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data && data.candidates && data.candidates[0]) {
-                            resolve(true);
-                        } else {
-                            reject(new Error('Invalid API response format'));
-                        }
-                    })
-                    .catch(error => {
-                        reject(error);
-                    });
-                });
+    return new Promise((resolve, reject) => {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: "This is a test request to verify the API key is valid. Just respond with 'OK'."
+                }]
+            }],
+            generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 10
             }
+        };
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        })
+        .then(async response => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.candidates && data.candidates[0]) {
+                resolve(true);
+            } else {
+                throw new Error('Invalid API response format');
+            }
+        })
+        .catch(error => {
+            console.error("API verification error:", error);
+            reject(new Error(`API key verification failed: ${error.message}`));
+        });
+    });
+}
 
             initSpeech() {
                 // Check if SpeechRecognition is available
@@ -1274,94 +1279,98 @@
             }
 
             async callGeminiAPI(text, sourceLang, targetLang) {
-                const sourceLanguage = this.getLanguageName(sourceLang);
-                const targetLanguage = this.getLanguageName(targetLang);
-                
-                const prompt = `
-                Translate the following text from ${sourceLang === 'auto' ? 'the detected language' : sourceLanguage} to ${targetLanguage}.
-                
-                Text to translate: "${text}"
-                
-                Please provide the response in JSON format with the following structure:
-                {
-                    "translation": "the translated text",
-                    "pronunciation": "phonetic pronunciation guide",
-                    "detectedLanguage": ${sourceLang === 'auto' ? '"the detected language"' : 'null'},
-                    "culturalNotes": "any relevant cultural context or notes about the translation",
-                    "alternatives": ["alternative translation 1", "alternative translation 2", "alternative translation 3"]
-                }
-                
-                Only respond with the JSON object, no additional text.
-                `;
-                
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`;
-                
-                const requestBody = {
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.2,
-                        maxOutputTokens: 1024
-                    }
+    const sourceLanguage = this.getLanguageName(sourceLang);
+    const targetLanguage = this.getLanguageName(targetLang);
+    
+    const prompt = `
+    Translate the following text from ${sourceLang === 'auto' ? 'the detected language' : sourceLanguage} to ${targetLanguage}.
+    
+    Text to translate: "${text}"
+    
+    Please provide the response in JSON format with the following structure:
+    {
+        "translation": "the translated text",
+        "pronunciation": "phonetic pronunciation guide",
+        "detectedLanguage": ${sourceLang === 'auto' ? '"the detected language"' : 'null'},
+        "culturalNotes": "any relevant cultural context or notes about the translation",
+        "alternatives": ["alternative translation 1", "alternative translation 2", "alternative translation 3"]
+    }
+    
+    Only respond with the JSON object, no additional text.
+    `;
+    
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`;
+    
+    const requestBody = {
+        contents: [{
+            parts: [{
+                text: prompt
+            }]
+        }],
+        generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 1024
+        }
+    };
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+            throw new Error('Invalid API response format');
+        }
+        
+        const responseText = data.candidates[0].content.parts[0].text;
+        
+        // Try to parse the JSON response
+        let translationData;
+        try {
+            translationData = JSON.parse(responseText);
+        } catch (e) {
+            // If parsing fails, try to extract JSON from markdown
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                translationData = JSON.parse(jsonMatch[0]);
+            } else {
+                // Fallback to simple translation
+                translationData = {
+                    translation: responseText.replace(/```json|```/g, '').trim()
                 };
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
-                    throw new Error('Invalid API response format');
-                }
-                
-                const responseText = data.candidates[0].content.parts[0].text;
-                
-                try {
-                    // Extract JSON from the response (handling potential text before/after JSON)
-                    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) {
-                        throw new Error('Could not parse JSON from API response');
-                    }
-                    
-                    const translationData = JSON.parse(jsonMatch[0]);
-                    
-                    // Ensure response has the required fields
-                    if (!translationData.translation) {
-                        throw new Error('Invalid translation data structure');
-                    }
-                    
-                    return {
-                        translation: translationData.translation,
-                        pronunciation: translationData.pronunciation || "Not available",
-                        detectedLanguage: translationData.detectedLanguage,
-                        culturalNotes: translationData.culturalNotes || "No cultural notes available for this translation.",
-                        alternatives: translationData.alternatives || []
-                    };
-                } catch (error) {
-                    console.error("Error parsing JSON:", error);
-                    
-                    // Fallback to simple extraction if JSON parsing fails
-                    return {
-                        translation: responseText.replace(/```json|```/g, '').trim(),
-                        pronunciation: "Not available",
-                        detectedLanguage: sourceLang === 'auto' ? this.getLanguageName('en') : null,
-                        culturalNotes: "No cultural notes available for this translation.",
-                        alternatives: []
-                    };
-                }
             }
+        }
+        
+        // Ensure we have at least the translation
+        if (!translationData.translation) {
+            throw new Error('Translation missing from API response');
+        }
+        
+        return {
+            translation: translationData.translation,
+            pronunciation: translationData.pronunciation || "Not available",
+            detectedLanguage: translationData.detectedLanguage || 
+                            (sourceLang === 'auto' ? this.getLanguageName('en') : null),
+            culturalNotes: translationData.culturalNotes || 
+                         "No cultural notes available for this translation.",
+            alternatives: translationData.alternatives || []
+        };
+    } catch (error) {
+        console.error("Translation API error:", error);
+        throw new Error(`Translation failed: ${error.message}`);
+    }
+}
 
             getLanguageName(code) {
                 const languages = {
