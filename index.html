@@ -6,7 +6,9 @@
     <title>AI Travel Translator Pro</title>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+   <style>
         /* All existing styles remain unchanged */
         
         /* Additional style for API key settings */
@@ -191,33 +193,6 @@
             z-index: 1;
         }
 
-        .voice-btn {
-            background: var(--primary);
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            position: absolute;
-            right: 15px;
-            bottom: 15px;
-            z-index: 2;
-            box-shadow: 0 5px 15px rgba(58, 134, 255, 0.3);
-            font-size: 1.2rem;
-        }
-
-        .voice-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .voice-btn.listening {
-            animation: pulse 1.5s infinite;
-            background: var(--accent);
-        }
 
         @keyframes pulse {
             0% {
@@ -756,7 +731,7 @@
             }
         }
 
-        .offline-mode {
+        /* .offline-mode {
             background: rgba(249, 199, 79, 0.1);
             padding: 12px;
             border-radius: 10px;
@@ -770,7 +745,7 @@
         .offline-icon {
             color: var(--warning);
             font-size: 1.2rem;
-        }
+        } */
 
         .recognition-status {
             position: absolute;
@@ -874,6 +849,16 @@
                         <option value="ko">Korean</option>
                         <option value="ru">Russian</option>
                         <option value="ar">Arabic</option>
+                        <option value="hi">Hindi</option>
+                        <option value="bn">Bengali</option>
+                        <option value="ta">Tamil</option>
+                        <option value="te">Telugu</option>
+                        <option value="mr">Marathi</option>
+                        <option value="gu">Gujarati</option>
+                        <option value="kn">Kannada</option>
+                        <option value="ml">Malayalam</option>
+                        <option value="pa">Punjabi</option>
+                        <option value="ur">Urdu</option>
                     </select>
                 </div>
                 
@@ -895,16 +880,26 @@
                         <option value="ko">Korean</option>
                         <option value="ru">Russian</option>
                         <option value="ar">Arabic</option>
+                        <option value="hi">Hindi</option>
+                        <option value="bn">Bengali</option>
+                        <option value="ta">Tamil</option>
+                        <option value="te">Telugu</option>
+                        <option value="mr">Marathi</option>
+                        <option value="gu">Gujarati</option>
+                        <option value="kn">Kannada</option>
+                        <option value="ml">Malayalam</option>
+                        <option value="pa">Punjabi</option>
+                        <option value="ur">Urdu</option>
                     </select>
                 </div>
             </div>
 
             <div class="input-container">
                 <div class="recognition-status" id="recognitionStatus">
-                    <i class="fas fa-microphone"></i> Listening...
+                 
                 </div>
-                <div class="voice-btn" id="voiceBtn" title="Click to start voice translation">
-                    <i class="fas fa-microphone"></i>
+                <div class="" id="voiceBtn" title="Click to start voice translation">
+                    
                 </div>
                 <div id="inputText" contenteditable="true" 
                      data-placeholder="Speak or type here to translate..." 
@@ -957,6 +952,7 @@
                 <div class="category-tab" data-category="Dining">Dining</div>
                 <div class="category-tab" data-category="Greetings">Greetings</div>
                 <div class="category-tab" data-category="Accommodation">Accommodation</div>
+                <div class="category-tab" data-category="Indian">Indian</div>
             </div>
             
             <div class="phrases-grid" id="commonPhrases"></div>
@@ -969,14 +965,6 @@
             </div>
         </div>
 
-        <div class="offline-mode">
-            <div class="offline-icon">
-                <i class="fas fa-cloud-download-alt"></i>
-            </div>
-            <div>
-                <strong>Offline mode available!</strong> Download language packs for translation without an internet connection.
-            </div>
-        </div>
     </div>
 
     <div class="settings-btn" id="settingsBtn">
@@ -1011,11 +999,7 @@
         <div class="setting-group">
             <h4>Interface</h4>
             <div class="setting-toggle">
-                <span>Auto Speech Recognition</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" checked>
-                    <span class="toggle-slider"></span>
-                </label>
+
             </div>
             <div class="setting-toggle">
                 <span>Auto-play pronunciation</span>
@@ -1041,26 +1025,7 @@
                 </label>
             </div>
         </div>
-        
-        <div class="setting-group">
-            <h4>Offline Languages</h4>
-            <div class="setting-toggle">
-                <span>Spanish</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-            
-            <div class="setting-toggle">
-                <span>French</span>
-                <label class="toggle-switch">
-                    <input type="checkbox">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-        </div>
-        
+   
         <div class="setting-footer">
             <button class="save-settings">Save Settings</button>
         </div>
@@ -1095,7 +1060,13 @@
                         { text: "Could you help me?", category: "Essential" },
                         { text: "Where is the nearest ATM?", category: "Navigation" },
                         { text: "What time does it open?", category: "Essential" },
-                        { text: "Can I have the bill, please?", category: "Dining" }
+                        { text: "Can I have the bill, please?", category: "Dining" },
+                        { text: "Namaste / Namaskar (Hello with respect)", category: "Indian" },
+                        { text: "Dhanyavaad (Thank you)", category: "Indian" },
+                        { text: "Aap kaise hain? (How are you?)", category: "Indian" },
+                        { text: "Mera naam ____ hai (My name is ____)", category: "Indian" },
+                        { text: "Chai please (Tea please)", category: "Indian" },
+                        { text: "Kitna hua? (How much?)", category: "Indian" }
                     ],
                     es: [
                         { text: "¿Dónde está el baño?", category: "Essential" },
@@ -1114,6 +1085,25 @@
                         { text: "¿A qué hora abre?", category: "Essential" },
                         { text: "¿Puede traerme la cuenta, por favor?", category: "Dining" }
                     ],
+
+                    hi: [
+            { text: "बाथरूम कहाँ है?", category: "Essential" },
+            { text: "यह कितने का है?", category: "Shopping" },
+            { text: "मुझे डॉक्टर चाहिए", category: "Emergency" },
+            { text: "दूतावास कहाँ है?", category: "Navigation" },
+            { text: "मुझे मूंगफली से एलर्जी है", category: "Dietary" },
+            { text: "क्या मैं मेन्यू देख सकता/सकती हूँ?", category: "Dining" },
+            { text: "सुप्रभात", category: "Greetings" },
+            { text: "बहुत बहुत धन्यवाद", category: "Essential" },
+            { text: "मैं समझ नहीं पा रहा/रही हूँ", category: "Essential" },
+            { text: "क्या आप अंग्रेजी बोलते हैं?", category: "Essential" },
+            { text: "मुझे चेक-इन करना है", category: "Accommodation" },
+            { text: "क्या आप मेरी मदद कर सकते हैं?", category: "Essential" },
+            { text: "नज़दीकी एटीएम कहाँ है?", category: "Navigation" },
+            { text: "यह किस समय खुलता है?", category: "Essential" },
+            { text: "क्या मुझे बिल मिल सकता है?", category: "Dining" }
+        ],
+
                     fr: [
                         { text: "Où sont les toilettes?", category: "Essential" },
                         { text: "Combien ça coûte?", category: "Shopping" },
@@ -1131,22 +1121,24 @@
                         { text: "À quelle heure est-ce que ça ouvre?", category: "Essential" },
                         { text: "L'addition, s'il vous plaît", category: "Dining" }
                     ]
+                    
                 };
                 
                 this.favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-                this.history = JSON.parse(localStorage.getItem('translationHistory')) || [];
-                this.recentlyUsed = JSON.parse(localStorage.getItem('recentlyUsed')) || [];
-                this.currentCategory = 'all';
-                this.apiKey = localStorage.getItem('geminiApiKey') || '';
-                
-                this.initSpeech();
-                this.bindEvents();
-                this.loadCommonPhrases();
-                this.updateHistory();
-                this.updateRecentlyUsed();
-                this.initApiKey();
-            }
-
+    this.history = []; // Will be populated from Firebase
+    this.recentlyUsed = JSON.parse(localStorage.getItem('recentlyUsed')) || [];
+    this.currentCategory = 'all';
+    this.apiKey = localStorage.getItem('geminiApiKey') || '';
+    
+    // Initialize Firebase
+    this.initFirebase();
+    
+    this.initSpeech();
+    this.bindEvents();
+    this.loadCommonPhrases();
+    this.updateRecentlyUsed();
+    this.initApiKey();
+}
             initApiKey() {
                 const apiKeyInput = document.getElementById('apiKey');
                 const apiStatus = document.getElementById('apiStatus');
@@ -1385,50 +1377,81 @@
                     'ko': 'Korean',
                     'ru': 'Russian',
                     'ar': 'Arabic',
-                    'auto': 'Auto-detect'
+                    'auto': 'Auto-detect',
+                    'hi': 'Hindi',
+                    'bn': 'Bengali',
+                    'ta': 'Tamil',
+                    'te': 'Telugu',
+                    'mr': 'Marathi',
+                    'gu': 'Gujarati',
+                    'kn': 'Kannada',
+                    'ml': 'Malayalam',
+                    'pa': 'Punjabi',
+                    'ur': 'Urdu'
+
                 };
                 return languages[code] || code;
             }
 
             showTranslation(result) {
-                const output = document.getElementById('output');
-                
-                let detectedLanguageHtml = '';
-                if (result.detectedLanguage) {
-                    detectedLanguageHtml = `
-                        <div style="margin-bottom: 10px; font-size: 0.9rem; color: var(--gray);">
-                            <i class="fas fa-language"></i> Detected language: <strong>${result.detectedLanguage}</strong>
-                        </div>
-                    `;
-                }
-                
-                output.innerHTML = `
-                    ${detectedLanguageHtml}
-                    <h3 style="color: var(--dark); margin-bottom: 10px;">${result.translation}</h3>
-                    
-                    <div class="pronunciation">
-                        <i class="fas fa-volume-up" style="margin-right: 5px;"></i> ${result.pronunciation}
-                    </div>
-                    
-                    <div class="cultural-notes">
-                        <i class="fas fa-info-circle"></i> ${result.culturalNotes}
-                    </div>
-                    
-                    <div class="alternatives">
-                        <h4>Alternative translations:</h4>
-                        <div class="alt-list">
-                            ${result.alternatives.map(alt => `<div class="alt-item">${alt}</div>`).join('')}
-                        </div>
-                    </div>
-                `;
-                
-                // Add click event to alternative translations
-                document.querySelectorAll('.alt-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        output.querySelector('h3').textContent = item.textContent;
-                    });
-                });
-            }
+    const output = document.getElementById('output');
+    
+    let detectedLanguageHtml = '';
+    if (result.detectedLanguage) {
+        detectedLanguageHtml = `
+            <div style="margin-bottom: 10px; font-size: 0.9rem; color: var(--gray);">
+                <i class="fas fa-language"></i> Detected language: <strong>${result.detectedLanguage}</strong>
+            </div>
+        `;
+    }
+    
+    // Check if this is an Indian language
+    const targetLang = document.getElementById('targetLang').value;
+    const isIndianLanguage = ['hi', 'bn', 'ta', 'te', 'mr', 'gu', 'kn', 'ml', 'pa', 'ur'].includes(targetLang);
+    
+    let culturalNotesHtml = `
+        <div class="cultural-notes">
+            <i class="fas fa-info-circle"></i> ${result.culturalNotes}
+        </div>
+    `;
+    
+    // Add extra cultural context for Indian languages
+    if (isIndianLanguage) {
+        culturalNotesHtml += `
+            <div class="cultural-notes" style="background: rgba(255, 133, 27, 0.1); border-left-color: #FF851B;">
+                <i class="fas fa-map-marker-alt"></i> <strong>Indian Cultural Context:</strong> 
+                Remember that in India, gestures and non-verbal communication are important. 
+                A slight head wobble can mean "yes" or acknowledgment. Joining hands (Namaste) 
+                is a respectful greeting that avoids physical contact.
+            </div>
+        `;
+    }
+    
+    output.innerHTML = `
+        ${detectedLanguageHtml}
+        <h3 style="color: var(--dark); margin-bottom: 10px;">${result.translation}</h3>
+        
+        <div class="pronunciation">
+            <i class="fas fa-volume-up" style="margin-right: 5px;"></i> ${result.pronunciation}
+        </div>
+        
+        ${culturalNotesHtml}
+        
+        <div class="alternatives">
+            <h4>Alternative translations:</h4>
+            <div class="alt-list">
+                ${result.alternatives.map(alt => `<div class="alt-item">${alt}</div>`).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Add click event to alternative translations
+    document.querySelectorAll('.alt-item').forEach(item => {
+        item.addEventListener('click', () => {
+            output.querySelector('h3').textContent = item.textContent;
+        });
+    });
+}
 
             addToHistory(original, translation) {
                 const timestamp = new Date();
@@ -1496,57 +1519,58 @@
             }
 
             updateHistory() {
-                const historyDiv = document.getElementById('translationHistory');
-                
-                if (!this.history.length) {
-                    historyDiv.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 20px;">No translation history yet</p>';
-                    return;
-                }
-                
-                historyDiv.innerHTML = this.history.map(item => `
-                    <div class="history-item">
-                        <div class="history-text">
-                            <div class="history-original">${item.original}</div>
-                            <div class="history-translation">${item.translation}</div>
-                            <div class="history-actions">
-                                <button class="history-action" data-action="copy">
-                                    <i class="far fa-copy"></i> Copy
-                                </button>
-                                <button class="history-action" data-action="speak">
-                                    <i class="fas fa-volume-up"></i> Speak
-                                </button>
-                                <button class="history-action" data-action="delete">
-                                    <i class="far fa-trash-alt"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                        <div class="history-time">
-                            ${this.formatTime(new Date(item.date))}
-                        </div>
-                    </div>
-                `).join('');
-                
-                // Add event listeners for history actions
-                document.querySelectorAll('.history-action').forEach((btn, index) => {
-                    const action = btn.getAttribute('data-action');
-                    const historyItem = this.history[Math.floor(index / 3)]; // 3 buttons per history item
-                    
-                    btn.addEventListener('click', () => {
-                        switch(action) {
-                            case 'copy':
-                                navigator.clipboard.writeText(historyItem.translation);
-                                this.showNotification('Copied to clipboard');
-                                break;
-                            case 'speak':
-                                this.speakText(historyItem.translation, historyItem.targetLang);
-                                break;
-                            case 'delete':
-                                this.deleteHistoryItem(Math.floor(index / 3));
-                                break;
-                        }
-                    });
-                });
+    const historyDiv = document.getElementById('translationHistory');
+    
+    if (!this.history.length) {
+        historyDiv.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 20px;">No translation history yet</p>';
+        return;
+    }
+    
+    historyDiv.innerHTML = this.history.map((item, index) => `
+        <div class="history-item" data-id="${item.id || ''}">
+            <div class="history-text">
+                <div class="history-original">${item.original}</div>
+                <div class="history-translation">${item.translation}</div>
+                <div class="history-actions">
+                    <button class="history-action" data-action="copy" data-index="${index}">
+                        <i class="far fa-copy"></i> Copy
+                    </button>
+                    <button class="history-action" data-action="speak" data-index="${index}">
+                        <i class="fas fa-volume-up"></i> Speak
+                    </button>
+                    <button class="history-action" data-action="delete" data-index="${index}">
+                        <i class="far fa-trash-alt"></i> Delete
+                    </button>
+                </div>
+            </div>
+            <div class="history-time">
+                ${this.formatTime(new Date(item.date))}
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners for history actions
+    document.querySelectorAll('.history-action').forEach((btn) => {
+        const action = btn.getAttribute('data-action');
+        const index = parseInt(btn.getAttribute('data-index'), 10);
+        const historyItem = this.history[index];
+        
+        btn.addEventListener('click', () => {
+            switch(action) {
+                case 'copy':
+                    navigator.clipboard.writeText(historyItem.translation);
+                    this.showNotification('Copied to clipboard');
+                    break;
+                case 'speak':
+                    this.speakText(historyItem.translation, historyItem.targetLang);
+                    break;
+                case 'delete':
+                    this.deleteHistoryItem(index);
+                    break;
             }
+        });
+    });
+}
             
             deleteHistoryItem(index) {
                 this.history.splice(index, 1);
@@ -1897,7 +1921,201 @@
                     notification.style.opacity = '0';
                 }, 2000);
             }
+        initFirebase() {
+                // Firebase configuration
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBnSHKImU_3S9Eb7qwZ7LGDpN7EHoZ8-j0",
+                    authDomain: "ai-translator-ad63c.firebaseapp.com",
+                    projectId: "ai-translator-ad63c",
+                    storageBucket: "ai-translator-ad63c.appspot.com",
+                    messagingSenderId: "901941750868",
+                    appId: "1:901941750868:web:ab8094df00d85d4684b5ea"
+                };
+                
+                try {
+                    // Initialize Firebase
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    
+                    this.db = firebase.firestore();
+                    this.translationsRef = this.db.collection('translations');
+                    
+                    // Generate or retrieve a unique user ID
+                    this.userId = localStorage.getItem('translatorUserId');
+                    if (!this.userId) {
+                        this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                        localStorage.setItem('translatorUserId', this.userId);
+                    }
+                    
+                    // Test write access
+                    this.testFirebasePermissions();
+                    
+                    // Load translation history from Firebase
+                    this.loadTranslationsFromFirebase();
+                } catch (error) {
+                    console.error('Firebase initialization error:', error);
+                    // Fallback to local storage only
+                    this.db = null;
+                    this.history = JSON.parse(localStorage.getItem('translationHistory')) || [];
+                }
+            }
+            
+            // Test Firebase permissions
+            async testFirebasePermissions() {
+                try {
+                    // Try to write a test document
+                    const testRef = this.db.collection('_test_permissions').doc(this.userId);
+                    await testRef.set({
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        userId: this.userId
+                    });
+                    
+                    // If successful, clean up the test document
+                    await testRef.delete();
+                    
+                    console.log('Firebase permissions verified');
+                    this.firebaseAvailable = true;
+                } catch (error) {
+                    console.warn('Firebase permission test failed:', error);
+                    this.showNotification('Firebase database access limited - using local storage');
+                    this.firebaseAvailable = false;
+                    
+                    // Set db to null to force local storage fallback
+                    this.db = null;
+                }
+            }
+            
+            // Load translations from Firebase
+            async loadTranslationsFromFirebase() {
+                try {
+                    const snapshot = await this.translationsRef
+                        .where('userId', '==', this.userId)
+                        .orderBy('timestamp', 'desc')
+                        .limit(20)
+                        .get();
+                    
+                    if (!snapshot.empty) {
+                        this.history = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data(),
+                            date: doc.data().timestamp.toDate().toISOString()
+                        }));
+                        
+                        // Update UI with loaded history
+                        this.updateHistory();
+                    }
+                } catch (error) {
+                    console.error('Error loading translations from Firebase:', error);
+                    // Fall back to local storage
+                    this.history = JSON.parse(localStorage.getItem('translationHistory')) || [];
+                    this.updateHistory();
+                    
+                    // Show user-friendly error notification
+                    this.showNotification('Using local storage for history (Firebase unavailable)');
+                }
+            }
+            
+            // Add translation to Firebase
+            async addToFirebase(original, translation, sourceLang, targetLang) {
+                try {
+                    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+                    const translationData = {
+                        userId: this.userId,
+                        original,
+                        translation,
+                        sourceLang,
+                        targetLang,
+                        timestamp
+                    };
+                    
+                    // Add to Firebase
+                    const docRef = await this.translationsRef.add(translationData);
+                    
+                    // Add the document ID to our local history
+                    this.history.unshift({
+                        id: docRef.id,
+                        ...translationData,
+                        date: new Date().toISOString()  // Temporary date until server timestamp is available
+                    });
+                    
+                    // Keep history limited to 20 items
+                    if (this.history.length > 20) this.history.pop();
+                    
+                    // Update UI
+                    this.updateHistory();
+                } catch (error) {
+                    console.error('Error adding translation to Firebase:', error);
+                    // Fallback to local storage method
+                    this.addToHistoryLocal(original, translation);
+                }
+            }
+            
+            // Delete translation from Firebase
+            async deleteTranslationFromFirebase(id, index) {
+                try {
+                    await this.translationsRef.doc(id).delete();
+                    this.history.splice(index, 1);
+                    this.updateHistory();
+                } catch (error) {
+                    console.error('Error deleting translation from Firebase:', error);
+                    // Fallback
+                    this.deleteHistoryItem(index);
+                }
+            }
+            
+            // Keep local storage method as fallback
+            addToHistoryLocal(original, translation) {
+                const timestamp = new Date();
+                
+                this.history.unshift({ 
+                    original, 
+                    translation,
+                    date: timestamp.toISOString(),
+                    sourceLang: document.getElementById('sourceLang').value,
+                    targetLang: document.getElementById('targetLang').value
+                });
+                
+                // Keep history limited to 20 items
+                if (this.history.length > 20) this.history.pop();
+                
+                // Save to local storage
+                localStorage.setItem('translationHistory', JSON.stringify(this.history));
+                this.updateHistory();
+            }
+            
+            // Update the addToHistory method to use Firebase
+            addToHistory(original, translation) {
+                const sourceLang = document.getElementById('sourceLang').value;
+                const targetLang = document.getElementById('targetLang').value;
+                
+                // Try to add to Firebase first
+                if (this.db) {
+                    this.addToFirebase(original, translation, sourceLang, targetLang);
+                } else {
+                    // Fallback to local storage
+                    this.addToHistoryLocal(original, translation);
+                }
+            }
+            
+
+            
+            // Update the deleteHistoryItem method to use Firebase
+            deleteHistoryItem(index) {
+                const item = this.history[index];
+                
+                if (item && item.id && this.db) {
+                    // If we have a Firebase ID, delete from Firebase
+                    this.deleteTranslationFromFirebase(item.id, index);
+                } else {
+                    // Fallback to local method
+                    this.history.splice(index, 1);
+                    localStorage.setItem('translationHistory', JSON.stringify(this.history));
+                    this.updateHistory();
+                }
+            }
         }
+
 
 
 
